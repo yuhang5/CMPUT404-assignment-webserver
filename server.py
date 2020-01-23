@@ -5,6 +5,7 @@ import os
 import time
 
 
+
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,18 +32,26 @@ import time
 # try: curl -v -X GET http://127.0.0.1:8080/
 
 
+# Copyright 2020 Yuhang Ma
+
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+
+#      http://www.apache.org/licenses/LICENSE-2.0
+
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+
+
+
+
 class MyWebServer(socketserver.BaseRequestHandler):
     alow_path = './www'
-    res_dir = re.compile('GET (.*?) HTTP')#匹配请求路径
-    
-    # def __init__(self, request, client_address, server):
-    #     self.request = request
-    #     self.client_address = client_address
-    #     self.server = server
-    #     self.setup()
-    #     self.dir = re.compile('GET (.*?) HTTP') 
-    #     self.alow_path = './www'#允许访问路径
-    #     super.__init__(request,client_address,server)
+    res_dir = re.compile('GET (.*?) HTTP')#Match request path
     
     #recive requests
     def handle(self):
@@ -52,93 +61,92 @@ class MyWebServer(socketserver.BaseRequestHandler):
             response = self.do_response(self.data)
             self.request.sendall(response.encode("utf-8"))
 
-    #get resquest path    
-    def do_response(self,data):
-        if data[:3] == b'GET':
-            path = self.res_dir.findall(data.decode())[0]
-            print(path)
-            # result = b''
-            if path == '/':
-                path = '/index.html'
-                response = self.deal_respose_head("301")
+#get resquest path
+def do_response(self,data):
+    if data[:3] == b'GET':
+        path = self.res_dir.findall(data.decode())[0]
+        print(path)
+        # result = b''
+        if path == '/':
+            path = '/index.html'
+            response = self.deal_respose_head("301")
                 # with open(self.alow_path+path,'rb') as f:
                 #     result = f.read().decode()
                 #     response += result
-                return response
+            return response
             try:
                 print("loading page:",self.alow_path+path)
                 response = self.deal_respose_head("200")
                 response += self.deal_mime(path.split('.')[1])
-                response += "\r\n" # 空一行与body隔开
+                response += "\r\n" # An empty line is separated from the body
                 with open(self.alow_path+path,'rb') as f:
                     result = f.read().decode()
                     response += result
                 return response
-            except:
-                if os.path.isdir(self.alow_path+path):
-                    if path[-1] !='/':
-                        response_headers = "HTTP/1.1 {} Moved Permanently\r\n".format(300) # 200 表示找到这个资源
-                        response_headers += "Location:http://localhost:8080/{}\r\n".format(path+'/')
-                        response_headers += "\r\n" # 空一行与body隔开
-                        return response_headers
+        except:
+            if os.path.isdir(self.alow_path+path):
+                if path[-1] !='/':
+                    response_headers = "HTTP/1.1 {} Moved Permanently\r\n".format(300)
+                    response_headers += "Location:http://127.0.0.1:8080/{}\r\n".format(path+'/')
+                    response_headers += "\r\n" # separated from the body
+                    return response_headers
                     else:
-                        response_headers = "HTTP/1.1 {} Moved Permanently\r\n".format(200) # 200 表示找到这个资源
+                        response_headers = "HTTP/1.1 {} Moved Permanently\r\n".format(200)
                         # response_headers += "Location:http://localhost:8080/{}\r\n".format(path+'/')
                         response_headers += self.deal_mime('html')
-                        response_headers += "\r\n" # 空一行与body隔开
+                        response_headers += "\r\n" # separated from the body
                         return response_headers
-                else:
-                    response = self.deal_respose_head("404")
-                    response = response + "<h3>404 error, Access Forbidden</h3>"
-                    return response
-        else:
-            response = self.deal_respose_head("405")
-            response = response + "<h3>405 error, Method Not Allowed</h3>"
-            return response
+            else:
+                response = self.deal_respose_head("404")
+                response = response + "<h3>404 error, Access Forbidden</h3>"
+                return response
+else:
+    response = self.deal_respose_head("405")
+    response = response + "<h3>405 error, Method Not Allowed</h3>"
+    return response
             pass
-            #405
+    #405
 
 
-    #处理 响应头 参考http报文结构
-    def deal_respose_head(self,status_code):
-        if status_code == '200':
-            response_headers = "HTTP/1.1 {} OK\r\n".format(status_code) # 200 表示找到这个资源
-            # 设置内容body
-            # 合并返回的response数据
-            return response_headers
+def deal_respose_head(self,status_code):
+    if status_code == '200':
+        response_headers = "HTTP/1.1 {} OK\r\n".format(status_code) # 200 ok
+        # Set content body
+        return response_headers
         if status_code == '301':
-            response_headers = "HTTP/1.1 {} Moved Permanently\r\n".format(status_code) # 200 表示找到这个资源
-            response_headers += "Location:http://localhost:8080/index.html\r\n"
-            response_headers += "\r\n" # 空一行与body隔开
+            response_headers = "HTTP/1.1 {} Moved Permanently\r\n".format(status_code)
+            response_headers += "Location:http://127.0.0.1:8080/index.html\r\n"
+            response_headers += "\r\n" # separated from the body
             return response_headers
-        if status_code == '404':
-            response_headers = "HTTP/1.1 {} Not Found\r\n".format(status_code) # 200 表示找到这个资源
-            return response_headers
+    if status_code == '404':
+        response_headers = "HTTP/1.1 {} Not Found\r\n".format(status_code)
+        return response_headers
         if status_code == "405":
-            response_headers = "HTTP/1.1 {} Method Not Allowed\r\n".format(status_code) # 200 表示找到这个资源
+            response_headers = "HTTP/1.1 {} Method Not Allowed\r\n".format(status_code) 
             return response_headers
 
-    def deal_mime(self,kind):
-        mimetype = {
-            'css':'text/css',
+def deal_mime(self,kind):
+    mimetype = {
+        'css':'text/css',
             'html':'text/html',
             '/':'text/plain',
-
+        
         }
-        return "content-type: {};\r\n".format(mimetype[kind])
+    return "content-type: {};\r\n".format(mimetype[kind])
 
-    
-    
+
+
 
 
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
-
+    
     socketserver.TCPServer.allow_reuse_address = True
     # Create the server, binding to localhost on port 8080
     server = socketserver.TCPServer((HOST, PORT), MyWebServer)
-
+    
     # Activate the server; this will keep running until you
     # interrupt the program with Ctrl-C
     server.serve_forever()
+
