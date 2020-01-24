@@ -48,11 +48,10 @@ import time
 
 
 
-
 class MyWebServer(socketserver.BaseRequestHandler):
     alow_path = './www'
     res_dir = re.compile('GET (.*?) HTTP')
-
+    
     
     #recive requests
     def handle(self):
@@ -66,17 +65,12 @@ class MyWebServer(socketserver.BaseRequestHandler):
     def do_response(self,data):
         if data[:3] == b'GET':
             path = self.res_dir.findall(data.decode())[0]
-            print(path)
-            # result = b''
+            print("loading page:",self.alow_path+path)
+
             if path == '/':
-                path = '/index.html'
                 response = self.deal_respose_head("301")
-                # with open(self.alow_path+path,'rb') as f:
-                #     result = f.read().decode()
-                #     response += result
                 return response
             try:
-                print("loading page:",self.alow_path+path)
                 response = self.deal_respose_head("200")
                 response += self.deal_mime(path.split('.')[1])
                 response += "\r\n" 
@@ -87,15 +81,21 @@ class MyWebServer(socketserver.BaseRequestHandler):
             except:
                 if os.path.isdir(self.alow_path+path):
                     if path[-1] !='/':
-                        response_headers = "HTTP/1.1 {} Moved Permanently\r\n".format(300) 
-                        response_headers += "Location:http://localhost:8080/{}\r\n".format(path+'/')
+                        response_headers = "HTTP/1.1 {} Moved Permanently\r\n".format(301)  
+                        response_headers += "Location:http://127.0.0.1:8080{}\r\n".format(path+'/')
                         response_headers += "\r\n" 
                         return response_headers
                     else:
-                        response_headers = "HTTP/1.1 {} Moved Permanently\r\n".format(200) 
-                        # response_headers += "Location:http://localhost:8080/{}\r\n".format(path+'/')
+                        print("1231231321")
+                        response_headers = "HTTP/1.1 {} OK\r\n".format(200) 
+                        response_headers += "Location:http://127.0.0.1:8080/index.html\r\n".format(path+'/')
+                        
                         response_headers += self.deal_mime('html')
                         response_headers += "\r\n" 
+                        # response_headers += ''.join(html_text)
+                        with open('./www/deep/index.html','rb') as f:
+                            result = f.read().decode()
+                            response_headers += result
                         return response_headers
                 else:
                     response = self.deal_respose_head("404")
@@ -105,24 +105,25 @@ class MyWebServer(socketserver.BaseRequestHandler):
             response = self.deal_respose_head("405")
             response = response + "<h3>405 error, Method Not Allowed</h3>"
             return response
-            pass
             #405
 
 
+  
     def deal_respose_head(self,status_code):
         if status_code == '200':
-            response_headers = "HTTP/1.1 {} OK\r\n".format(status_code)
+            response_headers = "HTTP/1.1 {} OK\r\n".format(status_code) 
+           
             return response_headers
         if status_code == '301':
             response_headers = "HTTP/1.1 {} Moved Permanently\r\n".format(status_code) 
-            response_headers += "Location:http://localhost:8080/index.html\r\n"
+            response_headers += "Location:http://127.0.0.1:8080/index.html\r\n"
             response_headers += "\r\n" 
             return response_headers
         if status_code == '404':
             response_headers = "HTTP/1.1 {} Not Found\r\n".format(status_code) 
             return response_headers
         if status_code == "405":
-            response_headers = "HTTP/1.1 {} Method Not Allowed\r\n".format(status_code) 
+            response_headers = "HTTP/1.1 {} Method Not Allowed\r\n".format(status_code) # 200 表示找到这个资源
             return response_headers
 
     def deal_mime(self,kind):
@@ -140,10 +141,10 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
 
 if __name__ == "__main__":
-    HOST, PORT = "localhost", 8080
+    HOST, PORT = "127.0.0.1", 8080
 
     socketserver.TCPServer.allow_reuse_address = True
-    # Create the server, binding to localhost on port 8080
+    # Create the server, binding to 127.0.0.1 on port 8080
     server = socketserver.TCPServer((HOST, PORT), MyWebServer)
 
     # Activate the server; this will keep running until you
