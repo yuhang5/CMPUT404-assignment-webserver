@@ -86,7 +86,6 @@ class MyWebServer(socketserver.BaseRequestHandler):
                         response_headers += "\r\n" 
                         return response_headers
                     else:
-                        print("1231231321")
                         response_headers = "HTTP/1.1 {} OK\r\n".format(200) 
                         response_headers += "Location:http://127.0.0.1:8080/index.html\r\n".format(path+'/')
                         
