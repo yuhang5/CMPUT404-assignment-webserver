@@ -111,7 +111,6 @@ class MyWebServer(socketserver.BaseRequestHandler):
     def deal_respose_head(self,status_code):
         if status_code == '200':
             response_headers = "HTTP/1.1 {} OK\r\n".format(status_code) 
-           
             return response_headers
         if status_code == '301':
             response_headers = "HTTP/1.1 {} Moved Permanently\r\n".format(status_code) 
@@ -122,7 +121,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
             response_headers = "HTTP/1.1 {} Not Found\r\n".format(status_code) 
             return response_headers
         if status_code == "405":
-            response_headers = "HTTP/1.1 {} Method Not Allowed\r\n".format(status_code) # 200 表示找到这个资源
+            response_headers = "HTTP/1.1 {} Method Not Allowed\r\n".format(status_code) 
             return response_headers
 
     def deal_mime(self,kind):
