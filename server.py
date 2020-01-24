@@ -144,7 +144,7 @@ if __name__ == "__main__":
     HOST, PORT = "127.0.0.1", 8080
 
     socketserver.TCPServer.allow_reuse_address = True
-    # Create the server, binding to 127.0.0.1 on port 8080
+    # Create the server, binding to 127.0.0.1 on port 8080 a
     server = socketserver.TCPServer((HOST, PORT), MyWebServer)
 
     # Activate the server; this will keep running until you
